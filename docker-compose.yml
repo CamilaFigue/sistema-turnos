@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16            # versión de Postgres a usar
+    container_name: turnos_db     # nombre del contenedor
+    environment:
+      POSTGRES_USER: turnos
+      POSTGRES_PASSWORD: turnos123
+      POSTGRES_DB: turnos         # base que se crea automáticamente
+    ports:
+      - "5432:5432"               # puerto de tu PC : puerto del contenedor
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # los datos sobreviven si apagás el contenedor
+
+volumes:
+  pgdata:
