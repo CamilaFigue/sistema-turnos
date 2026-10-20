@@ -2,6 +2,8 @@ import 'dotenv/config';            // carga .env en process.env (va primero)
 import express from 'express';
 import cors from 'cors';
 import { pool } from './db/pool';
+import { serviciosRouter } from './routes/servicios.routes';
+import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
 const app = express();
 app.use(cors());
@@ -12,6 +14,13 @@ app.get('/api/health', async (_req, res) => {
   const result = await pool.query('SELECT NOW()');
   res.json({ status: 'ok', dbTime: result.rows[0].now });
 });
+
+// Rutas de la API
+app.use('/api/servicios', serviciosRouter);
+
+// Siempre al final: primero el 404, después el manejador de errores
+app.use(rutaNoEncontrada);
+app.use(errorHandler);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
