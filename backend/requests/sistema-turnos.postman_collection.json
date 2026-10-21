@@ -423,6 +423,68 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Horarios",
+      "item": [
+        {
+          "name": "Trae los horarios de UN profesional",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profesionales/2/horarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "2",
+                "horarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"horarios\": [\r\n    { \"dia_semana\": 1, \"hora_inicio\": \"09:00\", \"hora_fin\": \"13:00\" },\r\n    { \"dia_semana\": 3, \"hora_inicio\": \"15:00\", \"hora_fin\": \"19:00\" },\r\n    { \"dia_semana\": 5, \"hora_inicio\": \"09:00\", \"hora_fin\": \"13:00\" }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/profesionales/3/horarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "3",
+                "horarios"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [

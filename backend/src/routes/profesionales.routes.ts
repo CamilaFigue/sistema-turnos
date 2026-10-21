@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as profesionalesController from '../controllers/profesionales.controller';
+import * as horariosController from '../controllers/horarios.controller';
 
 // Todas estas rutas cuelgan de /api/profesionales (ver index.ts)
 export const profesionalesRouter = Router();
@@ -11,3 +12,6 @@ profesionalesRouter.put('/:id', profesionalesController.actualizar);
 profesionalesRouter.delete('/:id', profesionalesController.eliminar);
 profesionalesRouter.patch('/:id/activar', profesionalesController.activar);
 profesionalesRouter.put('/:id/servicios', profesionalesController.asignarServicios);
+// Horarios de atención del profesional
+profesionalesRouter.get('/:id/horarios', horariosController.listar);
+profesionalesRouter.put('/:id/horarios', horariosController.reemplazar);
