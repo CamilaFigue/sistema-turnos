@@ -1,85 +1,82 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
+  <div class="layout">
+    <aside class="menu">
+      <p class="marca">Turnos</p>
       <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/servicios">Servicios</RouterLink>
       </nav>
-    </div>
-  </header>
+    </aside>
 
-  <RouterView />
+    <main class="contenido">
+      <RouterView />
+    </main>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
+.menu {
+  background: var(--color-menu);
+  color: #fff;
+  padding: 1.5rem 1rem;
+}
+
+.marca {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  padding: 0 0.75rem;
 }
 
 nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+  color: #cbd5e1;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radio);
 }
 
-nav a:first-of-type {
-  border: 0;
+nav a:hover {
+  background: rgb(255 255 255 / 0.08);
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+/* RouterLink agrega esta clase al link de la página actual */
+nav a.router-link-active {
+  background: var(--color-primario);
+  color: #fff;
+}
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+.contenido {
+  padding: 2rem;
+  max-width: 1100px;
+  width: 100%;
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
+/* En pantallas chicas, el menú pasa arriba */
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
 
   nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
+    flex-direction: row;
+  }
 
-    padding: 1rem 0;
-    margin-top: 1rem;
+  .contenido {
+    padding: 1rem;
   }
 }
 </style>
