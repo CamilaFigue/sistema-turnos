@@ -4,6 +4,7 @@ import cors from 'cors';
 import { pool } from './db/pool';
 import { serviciosRouter } from './routes/servicios.routes';
 import { profesionalesRouter } from './routes/profesionales.routes';
+import { turnosRouter } from './routes/turnos.routes';
 import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
 const app = express();
@@ -19,6 +20,7 @@ app.get('/api/health', async (_req, res) => {
 // Rutas de la API
 app.use('/api/servicios', serviciosRouter);
 app.use('/api/profesionales', profesionalesRouter);
+app.use('/api/turnos', turnosRouter);
 
 // Siempre al final: primero el 404, después el manejador de errores
 app.use(rutaNoEncontrada);

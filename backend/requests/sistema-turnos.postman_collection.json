@@ -656,6 +656,134 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Turnos",
+      "item": [
+        {
+          "name": "Solicitud de turno",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"profesional_id\": 2,\r\n  \"servicio_id\": 3,\r\n  \"fecha\": \"2026-11-03\",\r\n  \"hora\": \"18:00\",\r\n  \"notas\": \"Consulta\",\r\n  \"cliente\": { \"nombre\": \"Camila Figueroa\", \"telefono\": \"3413779321\", \"email\": \"CamilaFigueroa@mail.test\" }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/turnos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Horario elegido NO disponible",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"profesional_id\": 3,\r\n  \"servicio_id\": 7,\r\n  \"fecha\": \"2026-11-02\",\r\n  \"hora\": \"10:00\",\r\n  \"notas\": \"Consulta\",\r\n  \"cliente\": { \"nombre\": \"Lucia Ressiga\", \"telefono\": \"3413779876\", \"email\": \"luciaRessgia@mail.test\" }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/turnos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "turnos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Agenda del dia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/turnos?fecha=2026-11-02",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "turnos"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-11-02"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Estado del turno: Confirmado - Pendiente - Cancelado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \r\n    \"estado\": \"confirmado\" \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/turnos/4/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "turnos",
+                "4",
+                "estado"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
