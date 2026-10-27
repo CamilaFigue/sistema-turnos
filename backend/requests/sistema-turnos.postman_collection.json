@@ -485,6 +485,177 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Disponibilidad",
+      "item": [
+        {
+          "name": "Trae disponibilidad de UN profesional",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profesionales/1/disponibilidad?fecha=2026-10-28&servicio_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "1",
+                "disponibilidad"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-28"
+                },
+                {
+                  "key": "servicio_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dia que no trabaja",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profesionales/1/disponibilidad?fecha=2026-10-27&servicio_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "1",
+                "disponibilidad"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-27"
+                },
+                {
+                  "key": "servicio_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profesional no realiza UN servicio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profesionales/2/disponibilidad?fecha=2026-10-27&servicio_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "2",
+                "disponibilidad"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-27"
+                },
+                {
+                  "key": "servicio_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sin parametro servicio_id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profesionales/2/disponibilidad?fecha=2026-10-27",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "2",
+                "disponibilidad"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-27"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profesional NO encontrado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profesionales/999/disponibilidad?fecha=2026-10-27&servicio_id=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profesionales",
+                "999",
+                "disponibilidad"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "2026-10-27"
+                },
+                {
+                  "key": "servicio_id",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
