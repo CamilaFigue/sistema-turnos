@@ -7,6 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <aside class="menu">
       <p class="marca">Turnos</p>
       <nav>
+        <RouterLink to="/profesionales">Profesionales</RouterLink>
         <RouterLink to="/servicios">Servicios</RouterLink>
       </nav>
     </aside>

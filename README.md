@@ -1,6 +1,6 @@
 # 📅 Sistema de Turnos
 
-Sistema web para que negocios de servicios (peluquerías, consultorios, estudios de estética) gestionen su agenda y sus clientes puedan reservar turnos online.
+Sistema web para que negocios de servicios (consultorios, estudios de estética, peluquerías) gestionen su agenda y sus clientes puedan reservar turnos online.
 
 > 🚧 **Estado:** en desarrollo
 
@@ -52,8 +52,8 @@ cd sistema-turnos
 ```bash
 docker compose up -d
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/001_esquema_inicial.sql
-docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/seeds/001_datos_prueba.sql
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/002_turnos_sin_superposicion.sql
+docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/seeds/001_datos_prueba.sql
 ```
 
 ### 3. Backend
