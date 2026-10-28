@@ -145,6 +145,9 @@ onMounted(cargar)
           </td>
           <td>
             <div class="acciones">
+              <RouterLink :to="`/horarios?profesional=${profesional.id}`" class="boton">
+                Horarios
+              </RouterLink>
               <button class="boton" @click="abrirEdicion(profesional)">Editar</button>
               <button
                 :class="['boton', { 'boton-peligro': profesional.activo }]"
