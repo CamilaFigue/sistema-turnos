@@ -16,6 +16,11 @@ const router = createRouter({
       name: 'profesionales',
       component: () => import('../views/ProfesionalesView.vue'),
     },
+    {
+      path: '/horarios',
+      name: 'horarios',
+      component: () => import('../views/HorariosView.vue'),
+    },
   ],
 })
 
