@@ -11,6 +11,11 @@ const router = createRouter({
       // Carga diferida: el código de la pantalla se descarga recién cuando se visita
       component: () => import('../views/ServiciosView.vue'),
     },
+    {
+      path: '/profesionales',
+      name: 'profesionales',
+      component: () => import('../views/ProfesionalesView.vue'),
+    },
   ],
 })
 
