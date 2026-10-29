@@ -1,9 +1,22 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const auth = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+
+function salir() {
+  auth.cerrarSesion()
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
-  <div class="layout">
+  <!-- Las pantallas públicas (como el login) se muestran solas, sin el menú -->
+  <RouterView v-if="route.meta.publica" />
+
+  <div v-else class="layout">
     <aside class="menu">
       <p class="marca">Turnos</p>
       <nav>
@@ -12,6 +25,12 @@ import { RouterLink, RouterView } from 'vue-router'
         <RouterLink to="/horarios">Horarios</RouterLink>
         <RouterLink to="/servicios">Servicios</RouterLink>
       </nav>
+
+      <div v-if="auth.usuario" class="sesion">
+        <p class="usuario">{{ auth.usuario.nombre }}</p>
+        <p class="negocio">{{ auth.usuario.negocio.nombre }}</p>
+        <button class="salir" @click="salir">Cerrar sesión</button>
+      </div>
     </aside>
 
     <main class="contenido">
@@ -31,6 +50,8 @@ import { RouterLink, RouterView } from 'vue-router'
   background: var(--color-menu);
   color: #fff;
   padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .marca {
@@ -62,6 +83,38 @@ nav a.router-link-active {
   color: #fff;
 }
 
+/* margin-top: auto empuja la sesión al fondo del menú */
+.sesion {
+  margin-top: auto;
+  padding: 1rem 0.75rem 0;
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+}
+
+.usuario {
+  font-weight: 600;
+}
+
+.negocio {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.salir {
+  font: inherit;
+  font-size: 0.9rem;
+  background: none;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  color: #cbd5e1;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+.salir:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
 .contenido {
   padding: 2rem;
   max-width: 1100px;
@@ -78,6 +131,18 @@ nav a.router-link-active {
   nav {
     flex-direction: row;
     flex-wrap: wrap;
+  }
+
+  .sesion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .negocio {
+    margin-bottom: 0;
   }
 
   .contenido {

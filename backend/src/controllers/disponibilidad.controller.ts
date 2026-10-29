@@ -1,9 +1,7 @@
 import type { Request, Response } from 'express';
 import * as disponibilidadService from '../services/disponibilidad.service';
 import { HttpError } from '../utils/HttpError';
-
-// TEMPORAL: cuando hagamos el login, el negocio va a salir del token del usuario
-const NEGOCIO_ID = 1;
+import { negocioDe } from '../middlewares/autenticacion';
 
 function leerId(req: Request): number {
   const id = Number(req.params.id);
@@ -36,7 +34,7 @@ function validarServicioId(valor: unknown): number {
 // GET /api/profesionales/:id/disponibilidad?fecha=2026-10-26&servicio_id=1
 export async function obtener(req: Request, res: Response) {
   const horarios = await disponibilidadService.obtener(
-    NEGOCIO_ID,
+    negocioDe(req),
     leerId(req),
     validarFecha(req.query.fecha),
     validarServicioId(req.query.servicio_id),

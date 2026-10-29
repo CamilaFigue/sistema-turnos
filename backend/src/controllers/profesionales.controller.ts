@@ -2,9 +2,7 @@ import type { Request, Response } from 'express';
 import * as profesionalService from '../services/profesionales.service';
 import type { DatosProfesional } from '../services/profesionales.service';
 import { HttpError } from '../utils/HttpError';
-
-// TEMPORAL: cuando hagamos el login, el negocio va a salir del token del usuario
-const NEGOCIO_ID = 1;
+import { negocioDe } from '../middlewares/autenticacion';
 
 function esEnteroPositivo(valor: unknown): valor is number {
   return typeof valor === 'number' && Number.isInteger(valor) && valor > 0;
@@ -47,13 +45,13 @@ function validarServicioIds(body: unknown): number[] {
   return servicio_ids;
 }
 
-export async function listar(_req: Request, res: Response) {
-  const profesionales = await profesionalService.listar(NEGOCIO_ID);
+export async function listar(req: Request, res: Response) {
+  const profesionales = await profesionalService.listar(negocioDe(req));
   res.json(profesionales);
 }
 
 export async function obtener(req: Request, res: Response) {
-  const profesional = await profesionalService.obtener(NEGOCIO_ID, leerId(req));
+  const profesional = await profesionalService.obtener(negocioDe(req), leerId(req));
   if (!profesional) {
     throw new HttpError(404, 'Profesional no encontrado');
   }
@@ -61,12 +59,12 @@ export async function obtener(req: Request, res: Response) {
 }
 
 export async function crear(req: Request, res: Response) {
-  const profesional = await profesionalService.crear(NEGOCIO_ID, validarDatos(req.body));
+  const profesional = await profesionalService.crear(negocioDe(req), validarDatos(req.body));
   res.status(201).json(profesional);
 }
 
 export async function actualizar(req: Request, res: Response) {
-  const profesional = await profesionalService.actualizar(NEGOCIO_ID, leerId(req), validarDatos(req.body));
+  const profesional = await profesionalService.actualizar(negocioDe(req), leerId(req), validarDatos(req.body));
   if (!profesional) {
     throw new HttpError(404, 'Profesional no encontrado');
   }
@@ -74,7 +72,7 @@ export async function actualizar(req: Request, res: Response) {
 }
 
 export async function eliminar(req: Request, res: Response) {
-  const desactivado = await profesionalService.desactivar(NEGOCIO_ID, leerId(req));
+  const desactivado = await profesionalService.desactivar(negocioDe(req), leerId(req));
   if (!desactivado) {
     throw new HttpError(404, 'Profesional no encontrado');
   }
@@ -82,7 +80,7 @@ export async function eliminar(req: Request, res: Response) {
 }
 
 export async function activar(req: Request, res: Response) {
-  const profesional = await profesionalService.activar(NEGOCIO_ID, leerId(req));
+  const profesional = await profesionalService.activar(negocioDe(req), leerId(req));
   if (!profesional) {
     throw new HttpError(404, 'Profesional no encontrado');
   }
@@ -91,7 +89,7 @@ export async function activar(req: Request, res: Response) {
 
 export async function asignarServicios(req: Request, res: Response) {
   const profesional = await profesionalService.asignarServicios(
-    NEGOCIO_ID,
+    negocioDe(req),
     leerId(req),
     validarServicioIds(req.body),
   );
