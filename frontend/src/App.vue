@@ -7,6 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <aside class="menu">
       <p class="marca">Turnos</p>
       <nav>
+        <RouterLink to="/agenda">Agenda</RouterLink>
         <RouterLink to="/profesionales">Profesionales</RouterLink>
         <RouterLink to="/horarios">Horarios</RouterLink>
         <RouterLink to="/servicios">Servicios</RouterLink>
@@ -70,11 +71,13 @@ nav a.router-link-active {
 /* En pantallas chicas, el menú pasa arriba */
 @media (max-width: 700px) {
   .layout {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr): la columna nunca crece más que la pantalla por un contenido ancho */
+    grid-template-columns: minmax(0, 1fr);
   }
 
   nav {
     flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .contenido {

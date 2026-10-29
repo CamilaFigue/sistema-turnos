@@ -29,4 +29,8 @@ export const profesionalesApi = {
   activar: (id: number) => api.patch<Profesional>(`/profesionales/${id}/activar`),
   asignarServicios: (id: number, servicioIds: number[]) =>
     api.put<Profesional>(`/profesionales/${id}/servicios`, { servicio_ids: servicioIds }),
+  disponibilidad: (id: number, fecha: string, servicioId: number) =>
+    api.get<string[]>(
+      `/profesionales/${id}/disponibilidad?fecha=${fecha}&servicio_id=${servicioId}`,
+    ),
 }

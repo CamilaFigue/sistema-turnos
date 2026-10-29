@@ -3,12 +3,17 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    // Por ahora la pantalla de inicio es servicios; cuando exista la agenda, va a ser esa
-    { path: '/', redirect: '/servicios' },
+    // La pantalla de inicio es la agenda
+    { path: '/', redirect: '/agenda' },
+    {
+      path: '/agenda',
+      name: 'agenda',
+      // Carga diferida: el código de la pantalla se descarga recién cuando se visita
+      component: () => import('../views/AgendaView.vue'),
+    },
     {
       path: '/servicios',
       name: 'servicios',
-      // Carga diferida: el código de la pantalla se descarga recién cuando se visita
       component: () => import('../views/ServiciosView.vue'),
     },
     {
