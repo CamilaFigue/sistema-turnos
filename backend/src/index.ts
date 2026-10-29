@@ -2,9 +2,11 @@ import 'dotenv/config';            // carga .env en process.env (va primero)
 import express from 'express';
 import cors from 'cors';
 import { pool } from './db/pool';
+import { authRouter } from './routes/auth.routes';
 import { serviciosRouter } from './routes/servicios.routes';
 import { profesionalesRouter } from './routes/profesionales.routes';
 import { turnosRouter } from './routes/turnos.routes';
+import { requiereLogin } from './middlewares/autenticacion';
 import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
 const app = express();
@@ -17,10 +19,13 @@ app.get('/api/health', async (_req, res) => {
   res.json({ status: 'ok', dbTime: result.rows[0].now });
 });
 
-// Rutas de la API
-app.use('/api/servicios', serviciosRouter);
-app.use('/api/profesionales', profesionalesRouter);
-app.use('/api/turnos', turnosRouter);
+// Rutas públicas
+app.use('/api/auth', authRouter);
+
+// Rutas del panel: requiereLogin corre antes que cada router y corta si no hay sesión
+app.use('/api/servicios', requiereLogin, serviciosRouter);
+app.use('/api/profesionales', requiereLogin, profesionalesRouter);
+app.use('/api/turnos', requiereLogin, turnosRouter);
 
 // Siempre al final: primero el 404, después el manejador de errores
 app.use(rutaNoEncontrada);

@@ -2,9 +2,7 @@ import type { Request, Response } from 'express';
 import * as horarioService from '../services/horarios.service';
 import type { DatosHorario } from '../services/horarios.service';
 import { HttpError } from '../utils/HttpError';
-
-// TEMPORAL: cuando hagamos el login, el negocio va a salir del token del usuario
-const NEGOCIO_ID = 1;
+import { negocioDe } from '../middlewares/autenticacion';
 
 // "HH:MM" en formato 24 horas: 00:00 a 23:59
 const FORMATO_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -48,7 +46,7 @@ function validarHorarios(body: unknown): DatosHorario[] {
 }
 
 export async function listar(req: Request, res: Response) {
-  const horarios = await horarioService.listar(NEGOCIO_ID, leerId(req));
+  const horarios = await horarioService.listar(negocioDe(req), leerId(req));
   if (!horarios) {
     throw new HttpError(404, 'Profesional no encontrado');
   }
@@ -56,7 +54,7 @@ export async function listar(req: Request, res: Response) {
 }
 
 export async function reemplazar(req: Request, res: Response) {
-  const horarios = await horarioService.reemplazar(NEGOCIO_ID, leerId(req), validarHorarios(req.body));
+  const horarios = await horarioService.reemplazar(negocioDe(req), leerId(req), validarHorarios(req.body));
   if (!horarios) {
     throw new HttpError(404, 'Profesional no encontrado');
   }

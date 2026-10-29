@@ -2,10 +2,8 @@ import type { Request, Response } from 'express';
 import * as turnoService from '../services/turnos.service';
 import type { DatosTurno, EstadoTurno } from '../services/turnos.service';
 import { HttpError } from '../utils/HttpError';
+import { negocioDe } from '../middlewares/autenticacion';
 import { esEnteroPositivo, leerId, validarFecha, validarHora } from '../utils/validaciones';
-
-// TEMPORAL: cuando hagamos el login, el negocio va a salir del token del usuario
-const NEGOCIO_ID = 1;
 
 const ESTADOS: EstadoTurno[] = ['pendiente', 'confirmado', 'cancelado', 'completado'];
 
@@ -72,12 +70,12 @@ export async function listar(req: Request, res: Response) {
     }
   }
 
-  const turnos = await turnoService.listar(NEGOCIO_ID, fecha, profesionalId);
+  const turnos = await turnoService.listar(negocioDe(req), fecha, profesionalId);
   res.json(turnos);
 }
 
 export async function obtener(req: Request, res: Response) {
-  const turno = await turnoService.obtener(NEGOCIO_ID, leerId(req));
+  const turno = await turnoService.obtener(negocioDe(req), leerId(req));
   if (!turno) {
     throw new HttpError(404, 'Turno no encontrado');
   }
@@ -85,7 +83,7 @@ export async function obtener(req: Request, res: Response) {
 }
 
 export async function crear(req: Request, res: Response) {
-  const turno = await turnoService.crear(NEGOCIO_ID, validarDatos(req.body));
+  const turno = await turnoService.crear(negocioDe(req), validarDatos(req.body));
   res.status(201).json(turno);
 }
 
@@ -97,7 +95,7 @@ export async function cambiarEstado(req: Request, res: Response) {
     throw new HttpError(400, `estado debe ser uno de: ${ESTADOS.join(', ')}`);
   }
 
-  const turno = await turnoService.cambiarEstado(NEGOCIO_ID, id, estado as EstadoTurno);
+  const turno = await turnoService.cambiarEstado(negocioDe(req), id, estado as EstadoTurno);
   if (!turno) {
     throw new HttpError(404, 'Turno no encontrado');
   }
