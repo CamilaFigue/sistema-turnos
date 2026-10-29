@@ -118,6 +118,14 @@ h1 {
   border-bottom: none;
 }
 
+/* En celulares la tabla no entra: se desplaza hacia el costado dentro de su caja */
+@media (max-width: 700px) {
+  .tabla {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
 .acciones {
   display: flex;
   gap: 0.5rem;
