@@ -17,6 +17,13 @@ const router = createRouter({
       component: () => import('../views/LoginView.vue'),
       meta: { publica: true },
     },
+    {
+      // Página para pacientes: /reservar/consultorio-salud-integral
+      path: '/reservar/:slug',
+      name: 'reservar',
+      component: () => import('../views/ReservarView.vue'),
+      meta: { publica: true },
+    },
     // La pantalla de inicio es la agenda
     { path: '/', redirect: '/agenda' },
     {
