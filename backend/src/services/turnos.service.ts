@@ -79,7 +79,7 @@ export async function obtener(negocioId: number, id: number): Promise<Turno | nu
   return rows[0] ?? null;
 }
 
-export async function crear(negocioId: number, datos: DatosTurno): Promise<Turno> {
+export async function crear(negocioId: number, datos: DatosTurno, { actualizarCliente = true } = {}): Promise<Turno> {
   // CAPA 1: el horario tiene que estar entre los disponibles.
   // Reutilizamos la disponibilidad: ya valida profesional, servicio, franjas y superposiciones.
   const libres = await disponibilidadService.obtener(negocioId, datos.profesional_id, datos.fecha, datos.servicio_id);
@@ -95,15 +95,19 @@ export async function crear(negocioId: number, datos: DatosTurno): Promise<Turno
   try {
     await client.query('BEGIN');
 
-    // Si el teléfono ya es cliente del negocio, lo reutilizamos (y actualizamos sus datos);
-    // si no, lo creamos. "ON CONFLICT" usa el UNIQUE (negocio_id, telefono).
+    // Si el teléfono ya es cliente del negocio, lo reutilizamos; si no, lo creamos.
+    // "ON CONFLICT" usa el UNIQUE (negocio_id, telefono).
+    // $5 = actualizarCliente: si es false, el nombre queda como estaba y el email solo se completa si faltaba.
     const cliente = await client.query<{ id: number }>(
       `INSERT INTO clientes (negocio_id, nombre, telefono, email)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (negocio_id, telefono)
-       DO UPDATE SET nombre = EXCLUDED.nombre, email = COALESCE(EXCLUDED.email, clientes.email)
+       DO UPDATE SET
+         nombre = CASE WHEN $5 THEN EXCLUDED.nombre ELSE clientes.nombre END,
+         email = CASE WHEN $5 THEN COALESCE(EXCLUDED.email, clientes.email)
+                      ELSE COALESCE(clientes.email, EXCLUDED.email) END
        RETURNING id`,
-      [negocioId, datos.cliente.nombre, datos.cliente.telefono, datos.cliente.email],
+      [negocioId, datos.cliente.nombre, datos.cliente.telefono, datos.cliente.email, actualizarCliente],
     );
 
     // Fecha + hora local del negocio -> instante real; el fin se calcula con la duración del servicio

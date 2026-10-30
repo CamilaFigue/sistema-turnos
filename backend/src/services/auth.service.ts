@@ -19,12 +19,12 @@ export interface UsuarioSesion {
   nombre: string;
   email: string;
   rol: Rol;
-  negocio: { id: number; nombre: string };
+  negocio: { id: number; nombre: string; slug: string };
 }
 
 const CONSULTA_USUARIO = `
   SELECT u.id, u.nombre, u.email, u.rol,
-         json_build_object('id', n.id, 'nombre', n.nombre) AS negocio
+        json_build_object('id', n.id, 'nombre', n.nombre, 'slug', n.slug) AS negocio
   FROM usuarios u
   JOIN negocios n ON n.id = u.negocio_id`;
 

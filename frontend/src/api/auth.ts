@@ -6,7 +6,7 @@ export interface UsuarioSesion {
   nombre: string
   email: string
   rol: 'dueno' | 'empleado'
-  negocio: { id: number; nombre: string }
+  negocio: { id: number; nombre: string; slug: string }
 }
 
 export const authApi = {

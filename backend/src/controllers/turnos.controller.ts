@@ -38,7 +38,8 @@ function validarCliente(valor: unknown): DatosTurno['cliente'] {
   return { nombre: nombre.trim(), telefono: telefonoLimpio, email: emailLimpio };
 }
 
-function validarDatos(body: unknown): DatosTurno {
+// Exportada: la reserva pública valida los datos con las mismas reglas
+export function validarDatos(body: unknown): DatosTurno {
   const { profesional_id, servicio_id, fecha, hora, notas, cliente } = (body ?? {}) as Record<string, unknown>;
 
   if (!esEnteroPositivo(profesional_id)) {

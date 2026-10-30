@@ -6,6 +6,7 @@ import { authRouter } from './routes/auth.routes';
 import { serviciosRouter } from './routes/servicios.routes';
 import { profesionalesRouter } from './routes/profesionales.routes';
 import { turnosRouter } from './routes/turnos.routes';
+import { publicoRouter } from './routes/publico.routes';
 import { requiereLogin } from './middlewares/autenticacion';
 import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
@@ -21,6 +22,7 @@ app.get('/api/health', async (_req, res) => {
 
 // Rutas públicas
 app.use('/api/auth', authRouter);
+app.use('/api/publico', publicoRouter);  // página de reservas para pacientes
 
 // Rutas del panel: requiereLogin corre antes que cada router y corta si no hay sesión
 app.use('/api/servicios', requiereLogin, serviciosRouter);

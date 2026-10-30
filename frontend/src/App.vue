@@ -24,6 +24,15 @@ function salir() {
         <RouterLink to="/profesionales">Profesionales</RouterLink>
         <RouterLink to="/horarios">Horarios</RouterLink>
         <RouterLink to="/servicios">Servicios</RouterLink>
+        <!-- target="_blank": la página de los pacientes se abre en otra pestaña -->
+        <a
+          v-if="auth.usuario"
+          :href="`/reservar/${auth.usuario.negocio.slug}`"
+          target="_blank"
+          rel="noopener"
+        >
+          Página de reservas ↗
+        </a>
       </nav>
 
       <div v-if="auth.usuario" class="sesion">
