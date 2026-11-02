@@ -2,17 +2,22 @@
 
 Sistema web para que negocios de servicios (consultorios, estudios de estética, peluquerías) gestionen su agenda y sus clientes puedan reservar turnos online.
 
-> 🚧 **Estado:** en desarrollo
+> 🌐 **Demo:** [reservar un turno](https://sistema-turnos-xh4s.onrender.com/reservar/consultorio-salud-integral)
+>
+> El [panel de administración](https://sistema-turnos-xh4s.onrender.com/login) requiere una cuenta.
+>
+> ⏳ Corre en un plan gratuito: la primera visita puede tardar cerca de 1 minuto.
 
 ## ✨ Funcionalidades
 
-- [ ] Registro de negocios y login de usuarios (dueño / empleado)
-- [ ] Gestión de servicios (duración y precio)
-- [ ] Gestión de profesionales y sus horarios de atención
-- [ ] Cálculo de horarios disponibles
-- [ ] Página pública de reservas para clientes
-- [ ] Panel de agenda para el negocio
-- [ ] Multi-negocio: varios negocios usan el mismo sistema con datos aislados
+- [x] Login de usuarios (dueño / empleado)
+- [ ] Registro de negocios desde la app
+- [x] Gestión de servicios (duración y precio)
+- [x] Gestión de profesionales y sus horarios de atención
+- [x] Cálculo de horarios disponibles
+- [x] Página pública de reservas para clientes
+- [x] Panel de agenda para el negocio
+- [x] Multi-negocio: varios negocios usan el mismo sistema con datos aislados
 
 ## 🛠️ Tecnologías
 
@@ -21,7 +26,7 @@ Sistema web para que negocios de servicios (consultorios, estudios de estética,
 | Frontend | Vue 3, TypeScript, Vite, Vue Router, Pinia |
 | Backend | Node.js, Express, TypeScript |
 | Base de datos | PostgreSQL 16 |
-| Infraestructura | Docker Compose |
+| Infraestructura | Docker Compose (local), Render y Neon (producción) |
 
 ## 🗂️ Estructura
 
@@ -74,7 +79,7 @@ npm run dev
 ```
 App disponible en `http://localhost:5173`.
 
-### Usuario de prueba
+### Usuario de prueba (solo para la instalación local)
 - Email: `laura@consultorio.test`
 - Contraseña: `demo1234`
 
@@ -95,6 +100,11 @@ erDiagram
     SERVICIOS ||--o{ TURNOS : incluye
     CLIENTES ||--o{ TURNOS : reserva
 ```
+
+## 🔜 Mejoras posibles
+- Registro de negocios desde la app
+- Límite de peticiones en el login y las reservas públicas
+- Confirmación de turnos por WhatsApp o email
 
 ## 👩‍💻 Autora
 
