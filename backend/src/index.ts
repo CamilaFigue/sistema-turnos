@@ -1,6 +1,6 @@
 import 'dotenv/config';            // carga .env en process.env (va primero)
+import path from 'node:path';
 import express from 'express';
-import cors from 'cors';
 import { pool } from './db/pool';
 import { authRouter } from './routes/auth.routes';
 import { serviciosRouter } from './routes/servicios.routes';
@@ -11,7 +11,6 @@ import { requiereLogin } from './middlewares/autenticacion';
 import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
 const app = express();
-app.use(cors());
 app.use(express.json());           // permite leer JSON en el body de los requests
 
 // Ruta de prueba: confirma que el server y la DB responden
@@ -28,6 +27,20 @@ app.use('/api/publico', publicoRouter);  // página de reservas para pacientes
 app.use('/api/servicios', requiereLogin, serviciosRouter);
 app.use('/api/profesionales', requiereLogin, profesionalesRouter);
 app.use('/api/turnos', requiereLogin, turnosRouter);
+
+// Una ruta /api que no existe siempre responde 404 en JSON, nunca la página de Vue
+app.use('/api', rutaNoEncontrada);
+
+// En producción, este mismo servidor entrega el frontend ya compilado
+if (process.env.NODE_ENV === 'production') {
+  const carpetaFrontend = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(carpetaFrontend));
+
+  // Cualquier otra URL (/agenda, /reservar/...) devuelve index.html y Vue Router muestra la pantalla
+  app.get('/{*ruta}', (_req, res) => {
+    res.sendFile(path.join(carpetaFrontend, 'index.html'));
+  });
+}
 
 // Siempre al final: primero el 404, después el manejador de errores
 app.use(rutaNoEncontrada);
