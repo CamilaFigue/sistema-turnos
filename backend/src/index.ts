@@ -8,15 +8,29 @@ import { profesionalesRouter } from './routes/profesionales.routes';
 import { turnosRouter } from './routes/turnos.routes';
 import { publicoRouter } from './routes/publico.routes';
 import { requiereLogin } from './middlewares/autenticacion';
+import { limiteGeneral } from './middlewares/limites';
 import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
 const app = express();
+
+// En Render, cada petición pasa por proxies antes de llegar a Express.
+// Con esto, req.ip es la IP real del visitante y no la de un proxy.
+// En tu PC no hay proxy: si la variable no existe, queda en 0.
+app.set('trust proxy', Number(process.env.PROXIES_CONFIABLES ?? 0));
+
 app.use(express.json());           // permite leer JSON en el body de los requests
+app.use('/api', limiteGeneral);    // tope general de peticiones por IP
 
 // Ruta de prueba: confirma que el server y la DB responden
 app.get('/api/health', async (_req, res) => {
   const result = await pool.query('SELECT NOW()');
   res.json({ status: 'ok', dbTime: result.rows[0].now });
+});
+
+// Devuelve la IP con la que el servidor te ve. Sirve para comprobar que
+// PROXIES_CONFIABLES está bien: tiene que coincidir con tu IP pública.
+app.get('/api/mi-ip', (req, res) => {
+  res.json({ ip: req.ip });
 });
 
 // Rutas públicas
