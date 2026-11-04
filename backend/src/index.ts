@@ -29,8 +29,12 @@ app.get('/api/health', async (_req, res) => {
 
 // Devuelve la IP con la que el servidor te ve. Sirve para comprobar que
 // PROXIES_CONFIABLES está bien: tiene que coincidir con tu IP pública.
+// "cadena" es la lista de IPs que agregaron los proxies, de izquierda a derecha.
 app.get('/api/mi-ip', (req, res) => {
-  res.json({ ip: req.ip });
+  res.json({
+    ip: req.ip,
+    cadena: req.headers['x-forwarded-for'] ?? null,
+  });
 });
 
 // Rutas públicas
