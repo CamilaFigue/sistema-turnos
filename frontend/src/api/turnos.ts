@@ -1,7 +1,7 @@
 import { api } from './http'
 
 // Mismas formas que define el backend en turnos.service.ts
-export type EstadoTurno = 'pendiente' | 'confirmado' | 'cancelado' | 'completado'
+export type EstadoTurno = 'confirmado' | 'cancelado' | 'completado'
 
 export interface Turno {
   id: number

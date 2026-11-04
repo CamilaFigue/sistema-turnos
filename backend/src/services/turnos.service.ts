@@ -2,7 +2,7 @@ import { pool } from '../db/pool';
 import { HttpError } from '../utils/HttpError';
 import * as disponibilidadService from './disponibilidad.service';
 
-export type EstadoTurno = 'pendiente' | 'confirmado' | 'cancelado' | 'completado';
+export type EstadoTurno = 'confirmado' | 'cancelado' | 'completado';
 
 // Forma de un turno tal como lo devuelve la API (fechas y horas en la zona del negocio)
 export interface Turno {
@@ -28,9 +28,9 @@ export interface DatosTurno {
   cliente: { nombre: string; telefono: string; email: string | null };
 }
 
-// Desde qué estado se puede pasar a cuál. Cancelado y completado son finales.
+// Desde qué estado se puede pasar a cuál. Todo turno nace confirmado
+// (lo pone la base de datos por defecto); cancelado y completado son finales.
 const TRANSICIONES: Record<EstadoTurno, EstadoTurno[]> = {
-  pendiente: ['confirmado', 'cancelado'],
   confirmado: ['completado', 'cancelado'],
   cancelado: [],
   completado: [],

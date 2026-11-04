@@ -39,6 +39,6 @@ INSERT INTO clientes (negocio_id, nombre, telefono, email) VALUES
 -- Lunes 26/10 10:00 con la Dra. Gómez | Martes 27/10 11:00 con el Lic. Ruiz (hora Argentina, -03)
 INSERT INTO turnos (negocio_id, profesional_id, servicio_id, cliente_id, inicio, fin, estado) VALUES
   (1, 1, 1, 1, '2026-10-26 10:00-03', '2026-10-26 10:30-03', 'confirmado'),
-  (1, 2, 3, 2, '2026-10-27 11:00-03', '2026-10-27 11:45-03', 'pendiente');
+  (1, 2, 3, 2, '2026-10-27 11:00-03', '2026-10-27 11:45-03', 'confirmado');
 
 COMMIT;
