@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import * as turnoService from '../services/turnos.service';
 import type { DatosTurno, EstadoTurno } from '../services/turnos.service';
 import { HttpError } from '../utils/HttpError';
-import { negocioDe } from '../middlewares/autenticacion';
+import { negocioDe, profesionalPermitido } from '../middlewares/autenticacion';
 import { esEnteroPositivo, leerId, validarFecha, validarHora } from '../utils/validaciones';
 
 const ESTADOS: EstadoTurno[] = ['confirmado', 'cancelado', 'completado'];
@@ -71,12 +71,14 @@ export async function listar(req: Request, res: Response) {
     }
   }
 
-  const turnos = await turnoService.listar(negocioDe(req), fecha, profesionalId);
+  // Un profesional ve siempre su propia agenda, pida lo que pida
+  const permitido = await profesionalPermitido(req);
+  const turnos = await turnoService.listar(negocioDe(req), fecha, permitido ?? profesionalId);
   res.json(turnos);
 }
 
 export async function obtener(req: Request, res: Response) {
-  const turno = await turnoService.obtener(negocioDe(req), leerId(req));
+  const turno = await turnoService.obtener(negocioDe(req), leerId(req), await profesionalPermitido(req));
   if (!turno) {
     throw new HttpError(404, 'Turno no encontrado');
   }
@@ -88,7 +90,7 @@ export async function crear(req: Request, res: Response) {
   res.status(201).json(turno);
 }
 
-// PATCH /api/turnos/:id/estado  { "estado": "confirmado" }
+// PATCH /api/turnos/:id/estado  { "estado": "cancelado" }
 export async function cambiarEstado(req: Request, res: Response) {
   const id = leerId(req);
   const { estado } = (req.body ?? {}) as Record<string, unknown>;
@@ -96,7 +98,12 @@ export async function cambiarEstado(req: Request, res: Response) {
     throw new HttpError(400, `estado debe ser uno de: ${ESTADOS.join(', ')}`);
   }
 
-  const turno = await turnoService.cambiarEstado(negocioDe(req), id, estado as EstadoTurno);
+  const turno = await turnoService.cambiarEstado(
+    negocioDe(req),
+    id,
+    estado as EstadoTurno,
+    await profesionalPermitido(req),
+  );
   if (!turno) {
     throw new HttpError(404, 'Turno no encontrado');
   }

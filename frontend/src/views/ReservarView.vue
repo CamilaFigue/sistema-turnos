@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ApiError } from '@/api/http'
 import {
+  linkCancelacion,
   publicoApi,
   type NegocioPublico,
   type ServicioPublico,
@@ -32,6 +33,21 @@ const buscandoHorarios = ref(false)
 const enviando = ref(false)
 const error = ref('')
 const reservado = ref<TurnoReservado | null>(null)
+const copiado = ref(false)
+
+// Link para cancelar el turno recién reservado
+const link = computed(() =>
+  reservado.value ? linkCancelacion(slug, reservado.value.codigo_cancelacion) : '',
+)
+
+async function copiarLink() {
+  try {
+    await navigator.clipboard.writeText(link.value)
+    copiado.value = true
+  } catch {
+    // Sin acceso al portapapeles: el link queda a la vista para copiarlo a mano
+  }
+}
 
 const formatoPrecio = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })
 const formatoDia = new Intl.DateTimeFormat('es-AR', { weekday: 'short' })
@@ -119,6 +135,7 @@ async function reservar() {
 
 function reservarOtro() {
   reservado.value = null
+  copiado.value = false
   servicio.value = null
   profesionalId.value = null
   fecha.value = hoy()
@@ -163,7 +180,16 @@ onMounted(async () => {
           {{ formatoLargo(reservado.fecha) }}, de {{ reservado.hora_inicio }} a
           {{ reservado.hora_fin }}
         </p>
-        <p class="texto-suave">Si no podés asistir, avisanos para liberar el horario.</p>
+        <div class="cancelacion">
+          <p>
+            <strong>¿No vas a poder venir?</strong> Guardá este link: con él podés cancelar tu turno
+            hasta 2 horas antes.
+          </p>
+          <a :href="link" class="link">{{ link }}</a>
+          <button class="boton" type="button" @click="copiarLink">
+            {{ copiado ? '¡Copiado!' : 'Copiar link' }}
+          </button>
+        </div>
         <button class="boton" @click="reservarOtro">Reservar otro turno</button>
       </section>
 
@@ -468,5 +494,24 @@ h2 {
 .cuando {
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+.cancelacion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-fondo);
+  border-radius: var(--radio);
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+/* El link es largo y sin espacios: lo dejamos cortar en cualquier letra para que no desborde */
+.link {
+  color: var(--color-primario);
+  font-size: 0.85rem;
+  word-break: break-all;
 }
 </style>

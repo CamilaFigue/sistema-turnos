@@ -29,6 +29,8 @@ export const useAuthStore = defineStore('auth', () => {
   const usuario = ref<UsuarioSesion | null>(null)
 
   const estaLogueado = computed(() => token.value !== null)
+  // Ocultar pantallas es solo comodidad: el que de verdad controla los permisos es el backend
+  const esAdmin = computed(() => usuario.value?.rol === 'admin')
 
   // Al crear el store, si había un token guardado, la API ya lo empieza a usar
   usarToken(token.value)
@@ -61,5 +63,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { token, usuario, estaLogueado, iniciarSesion, cerrarSesion, cargarUsuario }
+  return { token, usuario, estaLogueado, esAdmin, iniciarSesion, cerrarSesion, cargarUsuario }
 })

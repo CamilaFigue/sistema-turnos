@@ -6,6 +6,7 @@ import { profesionalesApi, type Profesional } from '@/api/profesionales'
 import { serviciosApi, type Servicio } from '@/api/servicios'
 import { turnosApi, type DatosTurno, type EstadoTurno, type Turno } from '@/api/turnos'
 import TurnoFormulario from '@/components/TurnoFormulario.vue'
+import { useAuthStore } from '@/stores/auth'
 import { esFechaValida, formatoLargo, hoy, sumarDias } from '@/utils/fechas'
 
 // Qué acciones se ofrecen según el estado (las mismas transiciones que valida el backend)
@@ -26,6 +27,8 @@ const NOMBRE_ESTADO: Record<EstadoTurno, string> = {
 
 const route = useRoute()
 const router = useRouter()
+// El admin ve la agenda de todos y carga turnos; un profesional ve solo la suya
+const auth = useAuthStore()
 
 // La fecha y el profesional viven en la URL (/agenda?fecha=2026-11-02&profesional=1):
 // así se pueden recargar, compartir o volver atrás con el navegador
@@ -134,13 +137,16 @@ async function reservar(datos: DatosTurno) {
 watch([fecha, profesionalId], cargarTurnos)
 
 onMounted(async () => {
-  try {
-    ;[profesionales.value, servicios.value] = await Promise.all([
-      profesionalesApi.listar(),
-      serviciosApi.listar(),
-    ])
-  } catch (e) {
-    error.value = (e as Error).message
+  // Profesionales y servicios solo los usa el admin (filtro y "Nuevo turno")
+  if (auth.esAdmin) {
+    try {
+      ;[profesionales.value, servicios.value] = await Promise.all([
+        profesionalesApi.listar(),
+        serviciosApi.listar(),
+      ])
+    } catch (e) {
+      error.value = (e as Error).message
+    }
   }
   await cargarTurnos()
 })
@@ -150,11 +156,11 @@ onMounted(async () => {
   <section>
     <div class="encabezado">
       <div>
-        <h1>Agenda</h1>
+        <h1>{{ auth.esAdmin ? 'Agenda' : 'Mi agenda' }}</h1>
         <p class="fecha-larga">{{ formatoLargo(fecha) }}</p>
       </div>
       <button
-        v-if="!formularioAbierto"
+        v-if="auth.esAdmin && !formularioAbierto"
         class="boton boton-primario"
         @click="formularioAbierto = true"
       >
@@ -189,7 +195,12 @@ onMounted(async () => {
         />
       </div>
 
-      <select :value="profesionalId ?? ''" aria-label="Profesional" @change="elegirProfesional">
+      <select
+        v-if="auth.esAdmin"
+        :value="profesionalId ?? ''"
+        aria-label="Profesional"
+        @change="elegirProfesional"
+      >
         <option value="">Todos los profesionales</option>
         <option v-for="p in profesionales" :key="p.id" :value="p.id">{{ p.nombre }}</option>
       </select>
@@ -212,8 +223,8 @@ onMounted(async () => {
 
     <p v-if="turnos.length > 0" class="resumen texto-suave">
       {{ turnos.length }} {{ turnos.length === 1 ? 'turno' : 'turnos' }}:
-      {{ resumen.confirmado }} confirmados ·
-      {{ resumen.completado }} completados · {{ resumen.cancelado }} cancelados
+      {{ resumen.confirmado }} confirmados · {{ resumen.completado }} completados ·
+      {{ resumen.cancelado }} cancelados
     </p>
 
     <p v-if="cargando" class="texto-suave">Cargando...</p>
@@ -231,7 +242,9 @@ onMounted(async () => {
           </p>
           <p class="texto-suave">
             {{ turno.servicio.nombre }}
-            <template v-if="profesionalId === null"> · {{ turno.profesional.nombre }}</template>
+            <template v-if="auth.esAdmin && profesionalId === null">
+              · {{ turno.profesional.nombre }}
+            </template>
           </p>
           <p v-if="turno.notas" class="notas">{{ turno.notas }}</p>
         </div>

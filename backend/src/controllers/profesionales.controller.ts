@@ -3,6 +3,7 @@ import * as profesionalService from '../services/profesionales.service';
 import type { DatosProfesional } from '../services/profesionales.service';
 import { HttpError } from '../utils/HttpError';
 import { negocioDe } from '../middlewares/autenticacion';
+import { validarPasswordNueva } from './auth.controller';
 
 function esEnteroPositivo(valor: unknown): valor is number {
   return typeof valor === 'number' && Number.isInteger(valor) && valor > 0;
@@ -93,6 +94,36 @@ export async function asignarServicios(req: Request, res: Response) {
     leerId(req),
     validarServicioIds(req.body),
   );
+  if (!profesional) {
+    throw new HttpError(404, 'Profesional no encontrado');
+  }
+  res.json(profesional);
+}
+// POST /api/profesionales/:id/acceso  { "email": "...", "password": "..." }
+export async function darAcceso(req: Request, res: Response) {
+  const { email, password } = (req.body ?? {}) as Record<string, unknown>;
+
+  // En minúsculas: el login compara sin distinguir mayúsculas
+  const emailLimpio = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio)) {
+    throw new HttpError(400, 'El email no es válido');
+  }
+
+  const profesional = await profesionalService.darAcceso(
+    negocioDe(req),
+    leerId(req),
+    emailLimpio,
+    validarPasswordNueva(password),
+  );
+  if (!profesional) {
+    throw new HttpError(404, 'Profesional no encontrado');
+  }
+  res.json(profesional);
+}
+
+// DELETE /api/profesionales/:id/acceso
+export async function quitarAcceso(req: Request, res: Response) {
+  const profesional = await profesionalService.quitarAcceso(negocioDe(req), leerId(req));
   if (!profesional) {
     throw new HttpError(404, 'Profesional no encontrado');
   }

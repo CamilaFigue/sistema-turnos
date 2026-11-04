@@ -26,3 +26,27 @@ export async function yo(req: Request, res: Response) {
   }
   res.json(usuario);
 }
+
+// Exportada: dar acceso a un profesional valida la contraseña inicial con la misma regla
+export function validarPasswordNueva(valor: unknown): string {
+  if (typeof valor !== 'string' || valor.length < authService.LARGO_MINIMO_PASSWORD) {
+    throw new HttpError(400, `La contraseña debe tener al menos ${authService.LARGO_MINIMO_PASSWORD} caracteres`);
+  }
+  return valor;
+}
+
+// POST /api/auth/cambiar-password  { "actual": "...", "nueva": "..." }
+export async function cambiarPassword(req: Request, res: Response) {
+  const { actual, nueva } = (req.body ?? {}) as Record<string, unknown>;
+
+  if (typeof actual !== 'string' || actual === '') {
+    throw new HttpError(400, 'La contraseña actual es obligatoria');
+  }
+  const passwordNueva = validarPasswordNueva(nueva);
+  if (passwordNueva === actual) {
+    throw new HttpError(400, 'La contraseña nueva tiene que ser distinta de la actual');
+  }
+
+  await authService.cambiarPassword(req.usuario!.id, actual, passwordNueva);
+  res.status(204).send();
+}

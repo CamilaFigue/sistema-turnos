@@ -68,5 +68,35 @@ export async function reservar(req: Request, res: Response) {
     hora_fin: turno.hora_fin,
     profesional: turno.profesional.nombre,
     servicio: turno.servicio.nombre,
+    codigo_cancelacion: turno.codigo_cancelacion, // para armar el link de cancelación
   });
+}
+
+// El código llega en la URL. Si no tiene la forma de los que generamos, ni lo buscamos.
+function leerCodigo(req: Request): string {
+  const codigo = String(req.params.codigo);
+  if (!/^[A-Za-z0-9_-]{32}$/.test(codigo)) {
+    throw new HttpError(404, 'No encontramos ese turno. Revisá el link.');
+  }
+  return codigo;
+}
+
+// GET /api/publico/:slug/turnos/:codigo  -> el cliente ve su turno desde el link
+export async function verTurno(req: Request, res: Response) {
+  const negocio = await leerNegocio(req);
+  const turno = await turnoService.obtenerPorCodigo(negocio.id, leerCodigo(req));
+  if (!turno) {
+    throw new HttpError(404, 'No encontramos ese turno. Revisá el link.');
+  }
+  res.json(turno);
+}
+
+// POST /api/publico/:slug/turnos/:codigo/cancelar  -> el cliente cancela su turno
+export async function cancelarTurno(req: Request, res: Response) {
+  const negocio = await leerNegocio(req);
+  const turno = await turnoService.cancelarPorCodigo(negocio.id, leerCodigo(req));
+  if (!turno) {
+    throw new HttpError(404, 'No encontramos ese turno. Revisá el link.');
+  }
+  res.json(turno);
 }

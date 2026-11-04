@@ -10,13 +10,17 @@ Sistema web para que negocios de servicios (consultorios, estudios de estética,
 
 ## ✨ Funcionalidades
 
-- [x] Login de usuarios (dueño / empleado)
+- [x] Login con dos roles: **admin** (gestiona todo) y **profesional** (su propia agenda)
 - [ ] Registro de negocios desde la app
 - [x] Gestión de servicios (duración y precio)
 - [x] Gestión de profesionales y sus horarios de atención
+- [x] Acceso al panel para cada profesional y cambio de contraseña
+- [x] Bloqueo de días (francos, vacaciones): cancela los turnos de esos días
 - [x] Cálculo de horarios disponibles
-- [x] Página pública de reservas para clientes
+- [x] Página pública de reservas para clientes, con turnos confirmados al instante
+- [x] Link para que el cliente cancele su turno (hasta 2 horas antes)
 - [x] Panel de agenda para el negocio
+- [x] Límite de peticiones en el login y las reservas
 - [x] Multi-negocio: varios negocios usan el mismo sistema con datos aislados
 
 ## 🛠️ Tecnologías
@@ -59,6 +63,9 @@ docker compose up -d
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/001_esquema_inicial.sql
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/002_turnos_sin_superposicion.sql
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/003_turnos_confirmados.sql
+docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/004_roles.sql
+docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/005_bloqueos.sql
+docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/migrations/006_cancelacion_por_link.sql
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/seeds/001_datos_prueba.sql
 docker exec -i turnos_db psql -U turnos -d turnos -v ON_ERROR_STOP=1 < backend/seeds/002_passwords_demo.sql
 ```
@@ -80,9 +87,10 @@ npm run dev
 ```
 App disponible en `http://localhost:5173`.
 
-### Usuario de prueba (solo para la instalación local)
-- Email: `laura@consultorio.test`
-- Contraseña: `demo1234`
+### Usuarios de prueba (solo para la instalación local)
+Contraseña de todos: `demo1234`
+- Admin: `laura@consultorio.test`
+- Profesional: `martin@consultorio.test`
 
 ## 🧩 Modelo de datos
 
@@ -97,6 +105,7 @@ erDiagram
     PROFESIONALES ||--o{ PROFESIONAL_SERVICIOS : realiza
     SERVICIOS ||--o{ PROFESIONAL_SERVICIOS : "es realizado por"
     PROFESIONALES ||--o{ HORARIOS_ATENCION : trabaja
+    PROFESIONALES ||--o{ BLOQUEOS : "no atiende"
     PROFESIONALES ||--o{ TURNOS : atiende
     SERVICIOS ||--o{ TURNOS : incluye
     CLIENTES ||--o{ TURNOS : reserva
@@ -104,8 +113,8 @@ erDiagram
 
 ## 🔜 Mejoras posibles
 - Registro de negocios desde la app
-- Límite de peticiones en el login y las reservas públicas
-- Confirmación de turnos por WhatsApp o email
+- Avisos por WhatsApp o email al reservar, cancelar o bloquear días
+- Tests automáticos
 
 ## 👩‍💻 Autora
 

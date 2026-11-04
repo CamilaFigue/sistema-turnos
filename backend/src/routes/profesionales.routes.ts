@@ -13,6 +13,9 @@ profesionalesRouter.put('/:id', profesionalesController.actualizar);
 profesionalesRouter.delete('/:id', profesionalesController.eliminar);
 profesionalesRouter.patch('/:id/activar', profesionalesController.activar);
 profesionalesRouter.put('/:id/servicios', profesionalesController.asignarServicios);
+// Acceso al panel: crea o borra el usuario con el que el profesional inicia sesión
+profesionalesRouter.post('/:id/acceso', profesionalesController.darAcceso);
+profesionalesRouter.delete('/:id/acceso', profesionalesController.quitarAcceso);
 // Horarios de atención del profesional
 profesionalesRouter.get('/:id/horarios', horariosController.listar);
 profesionalesRouter.put('/:id/horarios', horariosController.reemplazar);

@@ -5,7 +5,7 @@ import { HttpError } from '../utils/HttpError';
 const PASO_MINUTOS = 30;
 
 // Arma todos los horarios de inicio posibles dentro de las franjas del día
-// y descarta los que se pisan con un turno existente o ya pasaron.
+// y descarta los de días bloqueados, los que se pisan con un turno existente o ya pasaron.
 //   $1 = profesional_id   $2 = fecha ('2026-10-26')   $3 = duración del servicio
 //   $4 = paso en minutos  $5 = zona horaria del negocio
 const CONSULTA_DISPONIBILIDAD = `
@@ -21,6 +21,11 @@ const CONSULTA_DISPONIBILIDAD = `
          ) AS inicio_local
     WHERE h.profesional_id = $1
       AND h.dia_semana = EXTRACT(DOW FROM $2::date)
+      AND NOT EXISTS (                          -- el día no está bloqueado (franco, vacaciones...)
+        SELECT 1 FROM bloqueos b
+        WHERE b.profesional_id = $1
+          AND $2::date BETWEEN b.desde AND b.hasta
+      )
   ),
   con_zona AS (
     -- Convertimos la hora local del negocio a un instante real (con zona horaria)

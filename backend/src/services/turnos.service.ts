@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { pool } from '../db/pool';
 import { HttpError } from '../utils/HttpError';
 import * as disponibilidadService from './disponibilidad.service';
@@ -18,6 +19,20 @@ export interface Turno {
   cliente: { id: number; nombre: string; telefono: string; email: string | null };
 }
 
+// Al crear un turno devolvemos también su código secreto, para armar el link de cancelación
+export type TurnoCreado = Turno & { codigo_cancelacion: string };
+
+// Lo que ve el cliente desde el link de cancelación: sin datos personales
+export interface TurnoPublico {
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  estado: EstadoTurno;
+  profesional: string;
+  servicio: string;
+  se_puede_cancelar: boolean;
+}
+
 // Datos que se reciben para reservar un turno
 export interface DatosTurno {
   profesional_id: number;
@@ -36,8 +51,18 @@ const TRANSICIONES: Record<EstadoTurno, EstadoTurno[]> = {
   completado: [],
 };
 
+// El cliente puede cancelar desde el link hasta estas horas antes del turno
+export const HORAS_MINIMAS_CANCELACION = 2;
+
 // Código de error de Postgres cuando se viola una restricción EXCLUDE
 const VIOLACION_EXCLUSION = '23P01';
+
+// Código secreto del link de cancelación: 24 bytes al azar = 32 caracteres.
+// Hay tantas combinaciones que es imposible adivinar uno probando.
+// base64url usa solo letras, números, "-" y "_": se puede poner en una URL tal cual.
+function generarCodigo(): string {
+  return randomBytes(24).toString('base64url');
+}
 
 // Consulta base: trae el turno con los datos de profesional, servicio y cliente
 function consultaTurnos(filtro: string): string {
@@ -74,14 +99,26 @@ export async function listar(
   return rows;
 }
 
-export async function obtener(negocioId: number, id: number): Promise<Turno | null> {
-  const { rows } = await pool.query<Turno>(consultaTurnos('t.id = $1 AND t.negocio_id = $2'), [id, negocioId]);
+// profesionalId: si viene, el turno tiene que ser de ese profesional (un profesional solo ve los suyos)
+export async function obtener(
+  negocioId: number,
+  id: number,
+  profesionalId: number | null = null,
+): Promise<Turno | null> {
+  const { rows } = await pool.query<Turno>(
+    consultaTurnos('t.id = $1 AND t.negocio_id = $2 AND ($3::bigint IS NULL OR t.profesional_id = $3)'),
+    [id, negocioId, profesionalId],
+  );
   return rows[0] ?? null;
 }
 
-export async function crear(negocioId: number, datos: DatosTurno, { actualizarCliente = true } = {}): Promise<Turno> {
+export async function crear(
+  negocioId: number,
+  datos: DatosTurno,
+  { actualizarCliente = true } = {},
+): Promise<TurnoCreado> {
   // CAPA 1: el horario tiene que estar entre los disponibles.
-  // Reutilizamos la disponibilidad: ya valida profesional, servicio, franjas y superposiciones.
+  // Reutilizamos la disponibilidad: ya valida profesional, servicio, franjas, bloqueos y superposiciones.
   const libres = await disponibilidadService.obtener(negocioId, datos.profesional_id, datos.fecha, datos.servicio_id);
   if (libres === null) {
     throw new HttpError(400, 'El profesional no existe');
@@ -90,6 +127,7 @@ export async function crear(negocioId: number, datos: DatosTurno, { actualizarCl
     throw new HttpError(409, 'El horario elegido no está disponible');
   }
 
+  const codigo = generarCodigo();
   const client = await pool.connect();
   let turnoId: number;
   try {
@@ -112,16 +150,25 @@ export async function crear(negocioId: number, datos: DatosTurno, { actualizarCl
 
     // Fecha + hora local del negocio -> instante real; el fin se calcula con la duración del servicio
     const turno = await client.query<{ id: number }>(
-      `INSERT INTO turnos (negocio_id, profesional_id, servicio_id, cliente_id, inicio, fin, notas)
+      `INSERT INTO turnos (negocio_id, profesional_id, servicio_id, cliente_id, inicio, fin, notas, codigo_cancelacion)
        SELECT $1, $2, s.id, $4,
               ($5::date + $6::time) AT TIME ZONE n.zona_horaria,
               ($5::date + $6::time + make_interval(mins => s.duracion_minutos)) AT TIME ZONE n.zona_horaria,
-              $7
+              $7, $8
        FROM servicios s
        JOIN negocios n ON n.id = s.negocio_id
        WHERE s.id = $3 AND s.negocio_id = $1
        RETURNING id`,
-      [negocioId, datos.profesional_id, datos.servicio_id, cliente.rows[0].id, datos.fecha, datos.hora, datos.notas],
+      [
+        negocioId,
+        datos.profesional_id,
+        datos.servicio_id,
+        cliente.rows[0].id,
+        datos.fecha,
+        datos.hora,
+        datos.notas,
+        codigo,
+      ],
     );
     turnoId = turno.rows[0].id;
 
@@ -137,17 +184,20 @@ export async function crear(negocioId: number, datos: DatosTurno, { actualizarCl
     client.release();
   }
 
-  return (await obtener(negocioId, turnoId))!;
+  const turno = (await obtener(negocioId, turnoId))!;
+  return { ...turno, codigo_cancelacion: codigo };
 }
 
 export async function cambiarEstado(
   negocioId: number,
   id: number,
   nuevoEstado: EstadoTurno,
+  profesionalId: number | null = null,
 ): Promise<Turno | null> {
+  // Si el turno es de otro profesional, respondemos igual que si no existiera
   const actual = await pool.query<{ estado: EstadoTurno }>(
-    'SELECT estado FROM turnos WHERE id = $1 AND negocio_id = $2',
-    [id, negocioId],
+    'SELECT estado FROM turnos WHERE id = $1 AND negocio_id = $2 AND ($3::bigint IS NULL OR profesional_id = $3)',
+    [id, negocioId, profesionalId],
   );
   if (actual.rowCount === 0) {
     return null;
@@ -160,4 +210,53 @@ export async function cambiarEstado(
 
   await pool.query('UPDATE turnos SET estado = $1 WHERE id = $2 AND negocio_id = $3', [nuevoEstado, id, negocioId]);
   return obtener(negocioId, id);
+}
+
+// Turno visto desde el link de cancelación. null si el código no existe en ese negocio.
+export async function obtenerPorCodigo(negocioId: number, codigo: string): Promise<TurnoPublico | null> {
+  const { rows } = await pool.query<TurnoPublico>(
+    `SELECT to_char(t.inicio AT TIME ZONE n.zona_horaria, 'YYYY-MM-DD') AS fecha,
+            to_char(t.inicio AT TIME ZONE n.zona_horaria, 'HH24:MI') AS hora_inicio,
+            to_char(t.fin AT TIME ZONE n.zona_horaria, 'HH24:MI') AS hora_fin,
+            t.estado,
+            p.nombre AS profesional,
+            s.nombre AS servicio,
+            (t.estado = 'confirmado' AND t.inicio - make_interval(hours => $3) > NOW()) AS se_puede_cancelar
+     FROM turnos t
+     JOIN negocios n      ON n.id = t.negocio_id
+     JOIN profesionales p ON p.id = t.profesional_id
+     JOIN servicios s     ON s.id = t.servicio_id
+     WHERE t.codigo_cancelacion = $1 AND t.negocio_id = $2`,
+    [codigo, negocioId, HORAS_MINIMAS_CANCELACION],
+  );
+  return rows[0] ?? null;
+}
+
+// El cliente cancela su turno desde el link
+export async function cancelarPorCodigo(negocioId: number, codigo: string): Promise<TurnoPublico | null> {
+  const turno = await obtenerPorCodigo(negocioId, codigo);
+  if (!turno) {
+    return null;
+  }
+  if (turno.estado !== 'confirmado') {
+    throw new HttpError(409, `Este turno ya está ${turno.estado}`);
+  }
+  if (!turno.se_puede_cancelar) {
+    throw new HttpError(
+      409,
+      `Faltan menos de ${HORAS_MINIMAS_CANCELACION} horas para el turno: para cancelarlo, comunicate con el consultorio`,
+    );
+  }
+
+  // Repetimos las condiciones en el UPDATE: si algo cambió entre la consulta y ahora, no cancela
+  const { rowCount } = await pool.query(
+    `UPDATE turnos SET estado = 'cancelado'
+     WHERE codigo_cancelacion = $1 AND negocio_id = $2
+       AND estado = 'confirmado' AND inicio - make_interval(hours => $3) > NOW()`,
+    [codigo, negocioId, HORAS_MINIMAS_CANCELACION],
+  );
+  if (rowCount === 0) {
+    throw new HttpError(409, 'No se pudo cancelar el turno. Recargá la página y volvé a intentar.');
+  }
+  return obtenerPorCodigo(negocioId, codigo);
 }

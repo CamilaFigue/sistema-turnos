@@ -8,12 +8,13 @@ VALUES ('Consultorio Salud Integral', 'consultorio-salud-integral', '1122334455'
 
 -- password_hash provisorio: lo reemplazamos cuando hagamos el login con bcrypt
 INSERT INTO usuarios (negocio_id, nombre, email, password_hash, rol) VALUES
-  (1, 'Dra. Laura Gómez', 'laura@consultorio.test', 'pendiente', 'dueno'),
-  (1, 'Sofía Díaz',       'recepcion@consultorio.test', 'pendiente', 'empleado');  -- recepcionista: usa el sistema pero no atiende
+  (1, 'Dra. Laura Gómez', 'laura@consultorio.test',     'pendiente', 'admin'),        -- dueña: gestiona todo y además atiende
+  (1, 'Sofía Díaz',       'recepcion@consultorio.test', 'pendiente', 'admin'),        -- recepcionista: gestiona todo pero no atiende
+  (1, 'Lic. Martín Ruiz', 'martin@consultorio.test',    'pendiente', 'profesional');  -- solo ve su agenda
 
 INSERT INTO profesionales (negocio_id, usuario_id, nombre) VALUES
   (1, 1,    'Dra. Laura Gómez'),   -- es dueña y además atiende
-  (1, NULL, 'Lic. Martín Ruiz');   -- atiende pero no tiene usuario
+  (1, 3,    'Lic. Martín Ruiz');   -- profesional con acceso a su propia agenda
 
 INSERT INTO servicios (negocio_id, nombre, descripcion, duracion_minutos, precio) VALUES
   (1, 'Consulta clínica',     'Primera consulta de clínica médica', 30, 20000),
