@@ -5,7 +5,7 @@ import { HttpError } from '../utils/HttpError';
 import { negocioDe } from '../middlewares/autenticacion';
 import { esEnteroPositivo, leerId, validarFecha, validarHora } from '../utils/validaciones';
 
-const ESTADOS: EstadoTurno[] = ['pendiente', 'confirmado', 'cancelado', 'completado'];
+const ESTADOS: EstadoTurno[] = ['confirmado', 'cancelado', 'completado'];
 
 function textoOpcional(valor: unknown, campo: string): string | null {
   if (valor === undefined || valor === null) {

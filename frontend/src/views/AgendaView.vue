@@ -10,10 +10,6 @@ import { esFechaValida, formatoLargo, hoy, sumarDias } from '@/utils/fechas'
 
 // Qué acciones se ofrecen según el estado (las mismas transiciones que valida el backend)
 const ACCIONES: Record<EstadoTurno, { estado: EstadoTurno; texto: string }[]> = {
-  pendiente: [
-    { estado: 'confirmado', texto: 'Confirmar' },
-    { estado: 'cancelado', texto: 'Cancelar' },
-  ],
   confirmado: [
     { estado: 'completado', texto: 'Completar' },
     { estado: 'cancelado', texto: 'Cancelar' },
@@ -23,7 +19,6 @@ const ACCIONES: Record<EstadoTurno, { estado: EstadoTurno; texto: string }[]> = 
 }
 
 const NOMBRE_ESTADO: Record<EstadoTurno, string> = {
-  pendiente: 'Pendiente',
   confirmado: 'Confirmado',
   completado: 'Completado',
   cancelado: 'Cancelado',
@@ -54,7 +49,6 @@ const formulario = useTemplateRef<InstanceType<typeof TurnoFormulario>>('formula
 // Cuántos turnos hay de cada estado, para el resumen del día
 const resumen = computed(() => {
   const cuenta: Record<EstadoTurno, number> = {
-    pendiente: 0,
     confirmado: 0,
     completado: 0,
     cancelado: 0,
@@ -218,7 +212,7 @@ onMounted(async () => {
 
     <p v-if="turnos.length > 0" class="resumen texto-suave">
       {{ turnos.length }} {{ turnos.length === 1 ? 'turno' : 'turnos' }}:
-      {{ resumen.pendiente }} pendientes · {{ resumen.confirmado }} confirmados ·
+      {{ resumen.confirmado }} confirmados ·
       {{ resumen.completado }} completados · {{ resumen.cancelado }} cancelados
     </p>
 
@@ -322,10 +316,6 @@ onMounted(async () => {
   padding: 0.75rem 1rem;
 }
 
-.turno-pendiente {
-  border-left-color: #f59e0b;
-}
-
 .turno-confirmado {
   border-left-color: var(--color-primario);
 }
@@ -350,11 +340,6 @@ onMounted(async () => {
 .notas {
   font-size: 0.9rem;
   font-style: italic;
-}
-
-.estado-pendiente {
-  background: #fef3c7;
-  color: #92400e;
 }
 
 .estado-confirmado {
