@@ -1,5 +1,6 @@
 import { pool } from '../db/pool';
 import { HttpError } from '../utils/HttpError';
+import { hashearPassword } from './auth.service';
 
 // Servicio asignado, en versión resumida (solo lo que necesita el frontend)
 export interface ServicioAsignado {
@@ -12,6 +13,7 @@ export interface Profesional {
   id: number;
   nombre: string;
   usuario_id: number | null;
+  email_acceso: string | null; // email con el que entra al panel, si tiene acceso
   activo: boolean;
   creado_en: Date;
   servicios: ServicioAsignado[];
@@ -27,7 +29,7 @@ export interface DatosProfesional {
 // Recibe el filtro del WHERE para reutilizarla en listar y obtener.
 function consultaProfesionales(filtro: string): string {
   return `
-    SELECT p.id, p.nombre, p.usuario_id, p.activo, p.creado_en,
+    SELECT p.id, p.nombre, p.usuario_id, u.email AS email_acceso, p.activo, p.creado_en,
            COALESCE(
              json_agg(json_build_object('id', s.id, 'nombre', s.nombre) ORDER BY s.nombre)
                FILTER (WHERE s.id IS NOT NULL),
@@ -36,8 +38,9 @@ function consultaProfesionales(filtro: string): string {
     FROM profesionales p
     LEFT JOIN profesional_servicios ps ON ps.profesional_id = p.id
     LEFT JOIN servicios s ON s.id = ps.servicio_id
+    LEFT JOIN usuarios u ON u.id = p.usuario_id
     WHERE ${filtro}
-    GROUP BY p.id
+    GROUP BY p.id, u.email
     ORDER BY p.nombre`;
 }
 
@@ -187,5 +190,88 @@ export async function asignarServicios(
     client.release(); // SIEMPRE devolver la conexión al pool
   }
 
+  return obtener(negocioId, id);
+}
+
+// Id del profesional vinculado a un usuario, o null si el usuario no atiende
+export async function idDeUsuario(negocioId: number, usuarioId: number): Promise<number | null> {
+  const { rows } = await pool.query<{ id: number }>(
+    'SELECT id FROM profesionales WHERE usuario_id = $1 AND negocio_id = $2',
+    [usuarioId, negocioId],
+  );
+  return rows[0]?.id ?? null;
+}
+
+// Crea un usuario con rol "profesional" y lo vincula al profesional.
+// Transacción: si el email ya existe, no queda un usuario creado a medias.
+export async function darAcceso(
+  negocioId: number,
+  id: number,
+  email: string,
+  password: string,
+): Promise<Profesional | null> {
+  const passwordHash = await hashearPassword(password);
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // FOR UPDATE: bloquea la fila hasta el COMMIT, así dos pedidos simultáneos no crean dos usuarios
+    const profesional = await client.query<{ nombre: string; usuario_id: number | null }>(
+      'SELECT nombre, usuario_id FROM profesionales WHERE id = $1 AND negocio_id = $2 FOR UPDATE',
+      [id, negocioId],
+    );
+    if (profesional.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+    if (profesional.rows[0].usuario_id !== null) {
+      throw new HttpError(409, 'Este profesional ya tiene acceso al panel');
+    }
+
+    const usuario = await client.query<{ id: number }>(
+      `INSERT INTO usuarios (negocio_id, nombre, email, password_hash, rol)
+       VALUES ($1, $2, $3, $4, 'profesional')
+       RETURNING id`,
+      [negocioId, profesional.rows[0].nombre, email, passwordHash],
+    );
+    await client.query('UPDATE profesionales SET usuario_id = $1 WHERE id = $2', [usuario.rows[0].id, id]);
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    if ((error as { code?: string }).code === VIOLACION_UNIQUE) {
+      throw new HttpError(409, 'Ese email ya está en uso');
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  return obtener(negocioId, id);
+}
+
+// Borra el usuario del profesional: deja de poder entrar al panel.
+// La FK "ON DELETE SET NULL" deja al profesional sin usuario_id; sus turnos no se tocan.
+export async function quitarAcceso(negocioId: number, id: number): Promise<Profesional | null> {
+  const { rows } = await pool.query<{ usuario_id: number | null; rol: string | null }>(
+    `SELECT p.usuario_id, u.rol
+     FROM profesionales p
+     LEFT JOIN usuarios u ON u.id = p.usuario_id
+     WHERE p.id = $1 AND p.negocio_id = $2`,
+    [id, negocioId],
+  );
+  if (!rows[0]) {
+    return null;
+  }
+  if (rows[0].usuario_id === null) {
+    throw new HttpError(409, 'Este profesional no tiene acceso al panel');
+  }
+  // Un admin que además atiende (por ejemplo, la dueña) no pierde el acceso desde acá
+  if (rows[0].rol !== 'profesional') {
+    throw new HttpError(409, 'Este acceso es de un administrador: no se puede quitar desde acá');
+  }
+
+  await pool.query('DELETE FROM usuarios WHERE id = $1 AND negocio_id = $2', [rows[0].usuario_id, negocioId]);
   return obtener(negocioId, id);
 }

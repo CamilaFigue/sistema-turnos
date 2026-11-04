@@ -214,13 +214,4 @@ onMounted(async () => {
   align-items: center;
   padding-top: 1rem;
 }
-
-.alerta-exito {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radio);
-  margin-bottom: 1rem;
-}
 </style>

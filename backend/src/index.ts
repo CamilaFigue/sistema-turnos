@@ -7,7 +7,8 @@ import { serviciosRouter } from './routes/servicios.routes';
 import { profesionalesRouter } from './routes/profesionales.routes';
 import { turnosRouter } from './routes/turnos.routes';
 import { publicoRouter } from './routes/publico.routes';
-import { requiereLogin } from './middlewares/autenticacion';
+import { bloqueosRouter } from './routes/bloqueos.routes';
+import { requiereLogin, soloAdmin } from './middlewares/autenticacion';
 import { limiteGeneral } from './middlewares/limites';
 import { errorHandler, rutaNoEncontrada } from './middlewares/errorHandler';
 
@@ -41,10 +42,13 @@ app.get('/api/mi-ip', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/publico', publicoRouter);  // página de reservas para pacientes
 
-// Rutas del panel: requiereLogin corre antes que cada router y corta si no hay sesión
-app.use('/api/servicios', requiereLogin, serviciosRouter);
-app.use('/api/profesionales', requiereLogin, profesionalesRouter);
+// Rutas del panel: requiereLogin corre antes que cada router y corta si no hay sesión.
+// soloAdmin corta además a los profesionales: esas pantallas son solo para administradores.
+app.use('/api/servicios', requiereLogin, soloAdmin, serviciosRouter);
+app.use('/api/profesionales', requiereLogin, soloAdmin, profesionalesRouter);
+// Turnos y bloqueos los usan los dos roles: cada controller limita qué ve un profesional
 app.use('/api/turnos', requiereLogin, turnosRouter);
+app.use('/api/bloqueos', requiereLogin, bloqueosRouter);
 
 // Una ruta /api que no existe siempre responde 404 en JSON, nunca la página de Vue
 app.use('/api', rutaNoEncontrada);

@@ -21,9 +21,13 @@ function salir() {
       <p class="marca">Turnos</p>
       <nav>
         <RouterLink to="/agenda">Agenda</RouterLink>
-        <RouterLink to="/profesionales">Profesionales</RouterLink>
-        <RouterLink to="/horarios">Horarios</RouterLink>
-        <RouterLink to="/servicios">Servicios</RouterLink>
+        <RouterLink to="/bloqueos">Días bloqueados</RouterLink>
+        <!-- Pantallas de gestión: solo para administradores -->
+        <template v-if="auth.esAdmin">
+          <RouterLink to="/profesionales">Profesionales</RouterLink>
+          <RouterLink to="/horarios">Horarios</RouterLink>
+          <RouterLink to="/servicios">Servicios</RouterLink>
+        </template>
         <!-- target="_blank": la página de los pacientes se abre en otra pestaña -->
         <a
           v-if="auth.usuario"
@@ -38,7 +42,10 @@ function salir() {
       <div v-if="auth.usuario" class="sesion">
         <p class="usuario">{{ auth.usuario.nombre }}</p>
         <p class="negocio">{{ auth.usuario.negocio.nombre }}</p>
-        <button class="salir" @click="salir">Cerrar sesión</button>
+        <div class="botones-sesion">
+          <RouterLink to="/cuenta" class="salir">Mi cuenta</RouterLink>
+          <button class="salir" @click="salir">Cerrar sesión</button>
+        </div>
       </div>
     </aside>
 
@@ -122,6 +129,12 @@ nav a.router-link-active {
 
 .salir:hover {
   background: rgb(255 255 255 / 0.08);
+}
+
+.botones-sesion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .contenido {

@@ -1,5 +1,5 @@
 import { api } from './http'
-import type { DatosTurno } from './turnos'
+import type { DatosTurno, EstadoTurno } from './turnos'
 
 // Mismas formas que devuelve el backend en publico.controller.ts
 export interface ServicioPublico {
@@ -24,6 +24,18 @@ export interface TurnoReservado {
   hora_fin: string
   profesional: string
   servicio: string
+  codigo_cancelacion: string // va en el link para cancelar
+}
+
+// Lo que ve el cliente desde el link de cancelación
+export interface TurnoPublico {
+  fecha: string
+  hora_inicio: string
+  hora_fin: string
+  estado: EstadoTurno
+  profesional: string
+  servicio: string
+  se_puede_cancelar: boolean
 }
 
 // Rutas sin login: el negocio se identifica por el slug de la URL
@@ -35,4 +47,13 @@ export const publicoApi = {
     ),
   reservar: (slug: string, datos: DatosTurno) =>
     api.post<TurnoReservado>(`/publico/${slug}/turnos`, datos),
+  verTurno: (slug: string, codigo: string) =>
+    api.get<TurnoPublico>(`/publico/${slug}/turnos/${codigo}`),
+  cancelarTurno: (slug: string, codigo: string) =>
+    api.post<TurnoPublico>(`/publico/${slug}/turnos/${codigo}/cancelar`),
+}
+
+// Link completo que el cliente guarda para cancelar su turno
+export function linkCancelacion(slug: string, codigo: string): string {
+  return `${window.location.origin}/reservar/${slug}/cancelar/${codigo}`
 }

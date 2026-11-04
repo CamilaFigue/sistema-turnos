@@ -7,6 +7,6 @@ BEGIN;
 
 UPDATE usuarios
 SET password_hash = '$2b$10$BkNWQTcbV7xbnkJIggZWNOzV9.OEECKsbF5905R9JnEc8fDlQofIu'
-WHERE email IN ('laura@consultorio.test', 'recepcion@consultorio.test');
+WHERE email IN ('laura@consultorio.test', 'recepcion@consultorio.test', 'martin@consultorio.test');
 
 COMMIT;

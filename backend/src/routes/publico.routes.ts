@@ -8,3 +8,6 @@ export const publicoRouter = Router();
 publicoRouter.get('/:slug', publicoController.obtenerNegocio);
 publicoRouter.get('/:slug/disponibilidad', publicoController.disponibilidad);
 publicoRouter.post('/:slug/turnos', limiteReservas, publicoController.reservar);
+// Link de cancelación: el código secreto reemplaza al login
+publicoRouter.get('/:slug/turnos/:codigo', publicoController.verTurno);
+publicoRouter.post('/:slug/turnos/:codigo/cancelar', publicoController.cancelarTurno);

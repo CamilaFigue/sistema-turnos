@@ -4,7 +4,8 @@ import { config } from '../config';
 import { pool } from '../db/pool';
 import { HttpError } from '../utils/HttpError';
 
-export type Rol = 'dueno' | 'empleado';
+// admin: gestiona todo el panel | profesional: solo su agenda y sus días bloqueados
+export type Rol = 'admin' | 'profesional';
 
 // Lo que guardamos dentro del token: lo mínimo para saber quién es y de qué negocio
 export interface UsuarioToken {
@@ -20,13 +21,17 @@ export interface UsuarioSesion {
   email: string;
   rol: Rol;
   negocio: { id: number; nombre: string; slug: string };
+  profesional: { id: number; nombre: string } | null; // si el usuario además atiende
 }
 
 const CONSULTA_USUARIO = `
   SELECT u.id, u.nombre, u.email, u.rol,
-        json_build_object('id', n.id, 'nombre', n.nombre, 'slug', n.slug) AS negocio
+        json_build_object('id', n.id, 'nombre', n.nombre, 'slug', n.slug) AS negocio,
+        CASE WHEN p.id IS NULL THEN NULL
+             ELSE json_build_object('id', p.id, 'nombre', p.nombre) END AS profesional
   FROM usuarios u
-  JOIN negocios n ON n.id = u.negocio_id`;
+  JOIN negocios n ON n.id = u.negocio_id
+  LEFT JOIN profesionales p ON p.usuario_id = u.id`;
 
 // Hash de una contraseña cualquiera. Si el email no existe, comparamos contra este igual,
 // para que la respuesta tarde lo mismo y no se pueda adivinar qué emails están registrados.
@@ -34,6 +39,14 @@ const HASH_FALSO = '$2b$10$BkNWQTcbV7xbnkJIggZWNOzV9.OEECKsbF5905R9JnEc8fDlQofIu
 
 // Mismo mensaje para email inexistente y contraseña incorrecta: no damos pistas
 const CREDENCIALES_INVALIDAS = 'Email o contraseña incorrectos';
+
+// Largo mínimo de una contraseña nueva
+export const LARGO_MINIMO_PASSWORD = 8;
+
+// bcrypt guarda el hash junto con su "costo" (cuántas vueltas hace). 10 es el valor habitual.
+export function hashearPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
 
 export async function login(
   email: string,
@@ -83,4 +96,21 @@ export async function obtenerSesion(usuarioId: number): Promise<UsuarioSesion | 
     usuarioId,
   ]);
   return rows[0] ?? null;
+}
+
+// El usuario logueado cambia su propia contraseña: tiene que saber la actual
+export async function cambiarPassword(usuarioId: number, actual: string, nueva: string): Promise<void> {
+  const { rows } = await pool.query<{ password_hash: string }>(
+    'SELECT password_hash FROM usuarios WHERE id = $1 AND activo',
+    [usuarioId],
+  );
+  if (!rows[0] || !(await bcrypt.compare(actual, rows[0].password_hash))) {
+    // 400 y no 401: con un 401 el frontend cerraría la sesión
+    throw new HttpError(400, 'La contraseña actual no es correcta');
+  }
+
+  await pool.query('UPDATE usuarios SET password_hash = $1 WHERE id = $2', [
+    await hashearPassword(nueva),
+    usuarioId,
+  ]);
 }
